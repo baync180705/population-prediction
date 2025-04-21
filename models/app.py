@@ -4,6 +4,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 from statsmodels.tsa.arima.model import ARIMA
 from sklearn.metrics import mean_absolute_error, r2_score, mean_squared_error
+from arima_streamlit import train_arima_model
+from linearreg_streamlit import train_linear_regression_model
 
 # Load data
 data = pd.read_csv(r'C:\Users\Arnav Agarwal\Desktop\population-prediction\data\indian population new.csv')
@@ -18,81 +20,25 @@ useful_data['Population'] = useful_data['Population'].apply(fixdata)
 # Streamlit app
 st.title("Population Prediction using ARIMA")
 
-# Display data
-if st.checkbox("Show Data"):
-    st.write(useful_data)
+# Add a dropdown for model selection
+model = st.selectbox("Select a Model", ["ARIMA", "Linear Regression", "XGBoost", "Exponential Regression"])
+st.write(f"You selected: {model}")
 
-# Train ARIMA model
-if st.button("Train ARIMA Model"):
-    X_train = useful_data['Population'][:70]
-    X_test = useful_data['Population'][70:]
-
-    train_const = [x for x in X_train]
-    pred_list = []
-
-    for j in range(len(X_test)):
-        model = ARIMA(train_const, order=(3, 0, 3))
-        model_fit = model.fit()
-        output = model_fit.forecast()
-        pred = output[0]
-        pred_list.append(pred)
-        train_const.append(X_test.iloc[j])
-
-    rmse = mean_squared_error(X_test, pred_list)
-    mae = mean_absolute_error(X_test, pred_list)
-    r2 = r2_score(X_test, pred_list)
+# Train ARIMA model when selected
+if model == "ARIMA":
+    rmse, mae, r2, fig = train_arima_model(useful_data)
 
     st.write(f"RMSE: {rmse}")
     st.write(f"MAE: {mae}")
     st.write(f"R2 Score: {r2}")
+    st.plotly_chart(fig)
 
-    # Adjust indexes by adding 1950
-    X_test.index = X_test.index + 1950
-    X_train.index = X_train.index + 1950
+# Train Linear Regression model when selected
+elif model == "Linear Regression":
+    rmse, mae, r2, fig = train_linear_regression_model(useful_data)
 
-    # Ensure pred_list and X_test have the same length
-    if len(pred_list) != len(X_test):
-        st.error("Prediction list and test data have mismatched lengths. Please check the model logic.")
-
-    # Create a DataFrame for plotting
-    plot_data = pd.DataFrame({
-        'Year': list(X_train.index) + list(X_test.index),
-        'Population': list(X_train) + pred_list,
-        'Type': ['Historical'] * len(X_train) + ['Predicted'] * len(pred_list)
-    })
-
-    # Add actual test data to the DataFrame
-    actual_data = pd.DataFrame({
-        'Year': list(X_test.index),
-        'Population': list(X_test.values),
-        'Type': ['Actual'] * len(X_test)
-    })
-    # Plot results using plotly.express
-    import plotly.express as px
-
-    # Predict population for the next 5 years
-    future_years = [X_test.index[-1] + i for i in range(1, 6)]
-    future_predictions = []
-
-    for _ in range(5):
-        model = ARIMA(train_const, order=(3, 0, 3))
-        model_fit = model.fit()
-        output = model_fit.forecast()
-        pred = output[0]
-        future_predictions.append(pred)
-        train_const.append(pred)
-
-    # Add future predictions to the DataFrame
-    future_data = pd.DataFrame({
-        'Year': future_years,
-        'Population': future_predictions,
-        'Type': ['Future'] * len(future_predictions)
-    })
-
-    plot_data = pd.concat([plot_data, future_data], ignore_index=True)
-
-    # Update the plot to include future predictions
-    fig = px.scatter(plot_data, x='Year', y='Population', color='Type', 
-                     title='Population Prediction (Including Future)', labels={'Population': 'Population', 'Year': 'Year'})
+    st.write(f"RMSE: {rmse}")
+    st.write(f"MAE: {mae}")
+    st.write(f"R2 Score: {r2}")
     st.plotly_chart(fig)
 
