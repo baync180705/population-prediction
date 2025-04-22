@@ -33,6 +33,15 @@ def train_arima_model(useful_data):
         'Type': ['Historical'] * len(X_train) + ['Predicted'] * len(pred_list)
     })
 
+    # Add actual test values to the DataFrame
+    actual_test_data = pd.DataFrame({
+        'Year': X_test.index,
+        'Population': X_test.values,
+        'Type': ['Historical'] * len(X_test)
+    })
+
+    plot_data = pd.concat([plot_data, actual_test_data], ignore_index=True)
+
     # Predict population for the next 5 years
     future_years = [X_test.index[-1] + i for i in range(1, 6)]
     future_predictions = []

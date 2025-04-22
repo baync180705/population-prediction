@@ -6,6 +6,7 @@ from statsmodels.tsa.arima.model import ARIMA
 from sklearn.metrics import mean_absolute_error, r2_score, mean_squared_error
 from arima_streamlit import train_arima_model
 from linearreg_streamlit import train_linear_regression_model
+from exporeg import train_exponential_regression_model
 
 # Load data
 data = pd.read_csv(r'C:\Users\Arnav Agarwal\Desktop\population-prediction\data\indian population new.csv')
@@ -36,6 +37,25 @@ if model == "ARIMA":
 # Train Linear Regression model when selected
 elif model == "Linear Regression":
     rmse, mae, r2, fig = train_linear_regression_model(useful_data)
+
+    st.write(f"RMSE: {rmse}")
+    st.write(f"MAE: {mae}")
+    st.write(f"R2 Score: {r2}")
+    st.plotly_chart(fig)
+
+# Train XGBoost model when selected
+elif model == "XGBoost":
+    from xgboost_streamlit import train_xgboost_model
+    rmse, mae, r2, fig = train_xgboost_model(useful_data)
+
+    st.write(f"RMSE: {rmse}")
+    st.write(f"MAE: {mae}")
+    st.write(f"R2 Score: {r2}")
+    st.plotly_chart(fig)
+
+# Train Exponential Regression model when selected
+elif model == "Exponential Regression":
+    rmse, mae, r2, fig = train_exponential_regression_model(useful_data)
 
     st.write(f"RMSE: {rmse}")
     st.write(f"MAE: {mae}")
